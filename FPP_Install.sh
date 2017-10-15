@@ -36,7 +36,7 @@
 #             - pi/raspberry
 #
 #############################################################################
-SCRIPTVER="0.2"
+SCRIPTVER="0.2.1"
 FPPBRANCH="master"
 FPPIMAGEVER="2.0alpha"
 FPPCFGVER="24"
@@ -223,7 +223,8 @@ for package in alsa-base alsa-utils arping avahi-daemon \
 				network-manager dhcp-helper hostapd parprouted bridge-utils \
 				firmware-atheros firmware-ralink firmware-brcm80211 \
 				wireless-tools resolvconf \
-				libmicrohttpd-dev libmicrohttpd10 libcurl4-openssl-dev
+				libmicrohttpd-dev libmicrohttpd10 libcurl4-openssl-dev \
+				software-properties-common
 do
 	apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install ${package}
 done
@@ -247,11 +248,12 @@ update-rc.d -f hostapd remove
 
 echo "FPP - Installing Pi-specific packages"
 
-echo "FPP - Installing ola"
-echo "deb   http://apt.openlighting.org/raspbian  wheezy main" >> /etc/apt/sources.list
-apt-get update
-apt-get install ola
-apt-get install ola-python ola-rdm-tests
+echo "FPP - Installing OLA from source"
+apt-get -y --force-yes install libcppunit-dev uuid-dev pkg-config libncurses5-dev libtool autoconf automake libmicrohttpd-dev protobuf-compiler python-protobuf libprotobuf-dev libprotoc-dev bison flex libftdi-dev libftdi1 libusb-1.0-0-dev liblo-dev
+apt-get -y clean
+git clone https://github.com/OpenLightingProject/ola.git /opt/ola
+(cd /opt/ola && autoreconf -i && ./configure --enable-rdm-tests --enable-python-libs && make && make install && ldconfig)
+rm -rf /opt/ola
 
 echo "FPP - Installing wiringpi"
 apt-get install wiringpi
