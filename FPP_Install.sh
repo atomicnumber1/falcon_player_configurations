@@ -36,14 +36,19 @@
 #             - pi/raspberry
 #
 #############################################################################
-SCRIPTVER="0.1"
+SCRIPTVER="0.2"
 FPPBRANCH="master"
 FPPIMAGEVER="2.0alpha"
 FPPCFGVER="24"
 FPPPLATFORM="Raspberry Pi"
-OSVER="debian_9"
+OSVER=""
 FPPDIR="/opt/fpp"
 
+#############################################################################
+# Gather some info about our system
+. /etc/os-release
+OSID=${ID}
+OSVER="${ID}_${VERSION_ID}"
 
 #############################################################################
 # Some Helper Functions
@@ -194,10 +199,10 @@ fi
 export DEBIAN_FRONTEND=noninteractive
 
 echo "FPP - Updating package list"
-apt update
+apt-get update
 
 echo "FPP - Upgrading packages"
-apt -y upgrade
+apt-get -y upgrade
 
 echo "FPP - Installing required packages"
 for package in alsa-base alsa-utils arping avahi-daemon \
@@ -220,14 +225,14 @@ for package in alsa-base alsa-utils arping avahi-daemon \
 				wireless-tools resolvconf \
 				libmicrohttpd-dev libmicrohttpd10 libcurl4-openssl-dev
 do
-	apt -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install ${package}
+	apt-get -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" install ${package}
 done
 
 echo "FPP - Configuring shellinabox to use /var/tmp"
 echo "SHELLINABOX_DATADIR=/var/tmp/" >> /etc/default/shellinabox
 
 echo "FPP - Cleaning up after installing packages"
-apt -y clean
+apt-get -y clean
 
 echo "FPP - Installing libhttpserver"
 (cd /opt/ && git clone https://github.com/etr/libhttpserver && cd libhttpserver && git checkout 0.13.0 && ./bootstrap && mkdir build && cd build && ../configure --prefix=/usr && make && make install && cd /opt/ && rm -rf /opt/libhttpserver)
@@ -244,15 +249,15 @@ echo "FPP - Installing Pi-specific packages"
 
 echo "FPP - Installing ola"
 echo "deb   http://apt.openlighting.org/raspbian  wheezy main" >> /etc/apt/sources.list
-apt update
-apt install ola
-apt install ola-python ola-rdm-tests
+apt-get update
+apt-get install ola
+apt-get install ola-python ola-rdm-tests
 
 echo "FPP - Installing wiringpi"
-apt install wiringpi
+apt-get install wiringpi
 
 echo "FPP - Installing wiringpi"
-apt install omxplayer
+apt-get install omxplayer
 
 echo "FPP - Disabling getty on onboard serial ttyAMA0"
 systemctl disable serial-getty@ttyAMA0.service
