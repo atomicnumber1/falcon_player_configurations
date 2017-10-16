@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ###########################################################
 # StartAudioPlaylist.sh - Start a playlist on the local   #
 # system                                                  #

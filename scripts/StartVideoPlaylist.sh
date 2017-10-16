@@ -25,4 +25,4 @@ fpp -P "${PLAYLISTNAME}" ${STARTITEM}
 # Set some environment variables
 . /opt/fpp/scripts/common
 
-sudo -u fpp /usr/bin/omxplayer --no-keys "${MEDIADIR}/videos/${VIDEOFILE}"
+sudo -u fpp /opt/fpp/scripts/omxplayer --no-keys "${MEDIADIR}/videos/${VIDEOFILE}"
