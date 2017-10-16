@@ -18,14 +18,14 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPTS_DIR = os.path.join(BASE_DIR, 'scripts')
 LOG_FILENAME = os.path.join(BASE_DIR, 'logs', 'falcon_player_controller.log')
 
-my_logger = logging.getLogger('FalconPlayerController')
-my_logger.setLevel(logging.DEBUG)
+logger = logging.getLogger('FalconPlayerController')
+logger.setLevel(logging.DEBUG)
 
 # Add the log message handler to the logger
 handler = logging.handlers.RotatingFileHandler(
               LOG_FILENAME, maxBytes=10*1024*1024, backupCount=5)
 
-my_logger.addHandler(handler)
+logger.addHandler(handler)
 
 app = Flask(__name__)
 api = Api(app)
@@ -59,29 +59,30 @@ class Playlist(Resource):
         if playlist == 'audio':
             try:
                 subprocess.check_call(['bash', '{}/StartAudioPlaylist.sh'.format(SCRIPTS_DIR)])
-                return ('[0]: Success! Playing Audio Playlist')
+                return ('[0] Success! Playing Audio Playlist')
             except subprocess.CalledProcessError as e:
-                print('Error Occurred during execution of StartAudioPlaylist:\n{}'.format(e))
-                return ('[1]: Ooops! Something\'s Wrong')
+                logger.error('Error Occurred during execution of StartAudioPlaylist:\n{}'.format(e))
+                return ('[1] Ooops! Something\'s Wrong')
         elif playlist == 'video':
             try:
                 subprocess.check_call(['bash', '{}/StartVideoPlaylist.sh'.format(SCRIPTS_DIR)])
-                return ('[0]: Success! Playing Video Playlist')
+                return ('[0] Success! Playing Video Playlist')
             except subprocess.CalledProcessError as e:
-                print('Error Occurred during execution of StartVideoPlaylist:\n{}'.format(e))
-                return ('[1]: Ooops! Something\'s Wrong')
-        return ('[1]: Yikes! No Such Playlist!')
+                logger.error('Error Occurred during execution of StartVideoPlaylist:\n{}'.format(e))
+                return ('[1] Ooops! Something\'s Wrong')
+        return ('[1] Yikes! No Such Playlist!')
 
     def pause_playlist(self, **kwargs):
-        return ('[2]: Oops! Not Implemented yet')
+        logger.warning("[pause_playlist] Not Implemented function.")
+        return ('[2] Oops! Not Implemented yet')
 
     def stop_playlist(self, **kwargs):
         try:
             subprocess.Popen(['bash', '{}/stopfpp.sh'.format(SCRIPTS_DIR)])
-            return ('[0]: Success! Stopped Playlist')
+            return ('[0] Success! Stopped Playlist')
         except Exception as e:
-            print('Error Occurred during execution of stopfpp:\n{}'.format(e))
-            return ('[3]: Ooops! Something\'s Wrong')
+            logger.error('Error Occurred during execution of stopfpp:\n{}'.format(e))
+            return ('[3] Ooops! Something\'s Wrong')
 
 class System(Resource):
 
@@ -99,18 +100,18 @@ class System(Resource):
     def reboot(self):
         try:
             subprocess.Popen(['bash', '{}/reboot.sh'.format(SCRIPTS_DIR)])
-            return ('[0]: Rebooting Pi in 10 secs!')
+            return ('[0] Rebooting Pi in 10 secs!')
         except Exception as e:
-            print('Error Occurred while Rebooting:\n{}'.format(e))
-            return ('[4]: Ooops! Something\'s Wrong')
+            logger.error('Error Occurred while Rebooting:\n{}'.format(e))
+            return ('[4] Ooops! Something\'s Wrong')
 
     def shutdown(self):
         try:
             subprocess.Popen(['bash', '{}/shutdown.sh'.format(SCRIPTS_DIR)])
-            return ('[0]: Shutting down Pi in 10 secs!')
+            return ('[0] Shutting down Pi in 10 secs!')
         except Exception as e:
-            print('Error Occurred while Shutting down:\n{}'.format(e))
-            return ('[5]: Ooops! Something\'s Wrong')
+            logger.error('Error Occurred while Shutting down:\n{}'.format(e))
+            return ('[5] Ooops! Something\'s Wrong')
 
 ##
 ## Actually setup the Api resource routing here
@@ -126,10 +127,10 @@ if __name__ == "__main__":
     from gevent.wsgi import WSGIServer
     address = ("0.0.0.0", 2017)
     server = WSGIServer(address, app,
-        log=my_logger, error_log=my_logger)
+        log=logger, error_log=logger)
     try:
-        print("Server running on port %s:%d. Ctrl+C to quit" % address)
+        logger.info("Server running on port %s:%d. Ctrl+C to quit" % address)
         server.serve_forever()
     except KeyboardInterrupt:
         server.stop()
-        print("Bye bye")
+        logger.info("Bye bye")
