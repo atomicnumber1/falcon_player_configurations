@@ -29,10 +29,11 @@ function play_playlist_video {
     # Stop current playlist
     $FPP -d
 
+    # Kill any omxplayers
+    sudo killall -9 omxplayer.bin
+
     # Start playlist
     $FPP -P "${PLAYLISTNAME}" ${STARTITEM}
-
-    sudo killall -9 omxplayer.bin
     sudo -u fpp /usr/bin/omxplayer ${FORCEAUDIO} --no-keys --vol ${DB}00 "${MEDIADIR}/videos/${VIDEOFILE}"
 }
 
