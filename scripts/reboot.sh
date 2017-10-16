@@ -5,4 +5,4 @@
 
 # Issue the OS command to shutdown Linux and halt the processor
 sleep 10
-/sbin/shutdown -r now
+sudo /sbin/shutdown -r now

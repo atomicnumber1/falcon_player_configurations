@@ -15,7 +15,7 @@ VOLUME=75
 # 75% FPP volume is 87.5% amixer which is around 0dB in omxplayer
 DB=$(echo "((50 + (${VOLUME}/2)) - 87.5) / 2.5 * 3" | bc)
 PLAYLISTNAME="video"
-VIDEOFILE="video.mp4"
+VIDEOFILE=$(ls ${MEDIADIR}/videos/)
 
 # Stop current playlist
 $FPP -d
@@ -27,4 +27,4 @@ sudo killall -9 omxplayer.bin
 $FPP -P "${PLAYLISTNAME}"
 
 # Start video
-sudo -u fpp /usr/bin/omxplayer ${FORCEAUDIO} --no-keys --vol ${DB}00 "${MEDIADIR}/videos/${VIDEOFILE}"
+nohup sudo -u fpp /usr/bin/omxplayer ${FORCEAUDIO} --no-keys --vol ${DB}00 "${MEDIADIR}/videos/${VIDEOFILE}" &> /dev/null &
