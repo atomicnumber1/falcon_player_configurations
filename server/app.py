@@ -14,7 +14,7 @@ from flask import Flask
 from flask_restful import (Api, Resource)
 
 
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SCRIPTS_DIR = os.path.join(BASE_DIR, 'scripts')
 LOG_FILENAME = os.path.join(BASE_DIR, 'logs', 'falcon_player_controller.log')
 
