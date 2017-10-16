@@ -4,18 +4,19 @@
 #################################################################
 
 
+import os
 import subprocess
 import logging
 import logging.handlers
 
 
 from flask import Flask
-from flask_restful import reqparse, abort, Api, Resource
+from flask_restful import (Api, Resource)
 
 
-SCRIPTS_DIR = '/home/fpp/scripts/'
-
-LOG_FILENAME = '/home/fpp/logs/falcon_player_controller.log'
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+SCRIPTS_DIR = os.path.join(BASE_DIR, 'scripts')
+LOG_FILENAME = os.path.join(BASE_DIR, 'logs', 'falcon_player_controller.log')
 
 my_logger = logging.getLogger('FalconPlayerController')
 my_logger.setLevel(logging.DEBUG)
@@ -31,84 +32,92 @@ api = Api(app)
 
 actions_supported = ['start', 'pause', 'stop', 'reboot', 'shutdown']
 
-parser = reqparse.RequestParser()
-parser.add_argument('action')
-parser.add_argument('playlist')
-
 # Info
 # shows info about supported actions
 class Info(Resource):
     def get(self):
         return actions_supported
 
-# Do
-# performs the requested actions
-class Do(Resource):
+# Playlist
+# performs the requested playlist actions
+class Playlist(Resource):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.actions = {
-            'play': lambda x: self.play_palylist(x),
-            'pause': lambda x: self.pause_palylist(x),
+            'play': lambda x: self.play_playlist(x),
+            'pause': lambda x: self.pause_playlist(),
             'stop': lambda x: self.stop_playlist(),
-            'reboot': lambda x: self.reboot(),
-            'shutdown': lambda x: self.shutdown(),
         }
+        self.default = lambda x: list(self.actions.keys())
 
-    def get(self, action, playlist=None):
-        return self.actions.get(action)(playlist)
+    def get(self, action, playlist):
+        return self.actions.get(action, self.default)(playlist)
 
     def play_playlist(self, playlist):
-        if not playlist:
-            return ('No Such Playlist!')
 
         if playlist == 'audio':
             try:
-                subprocess.check_call(['bash', '{}/StartVideoPlaylist.sh'.format(SCRIPTS_DIR)])
-                return ('Success! Playing Audio Playlist')
+                subprocess.check_call(['bash', '{}/StartAudioPlaylist.sh'.format(SCRIPTS_DIR)])
+                return ('[0]: Success! Playing Audio Playlist')
             except subprocess.CalledProcessError as e:
                 print('Error Occurred during execution of StartAudioPlaylist:\n{}'.format(e))
-                return ('Ooops! Something\'s Wrong')
+                return ('[1]: Ooops! Something\'s Wrong')
         elif playlist == 'video':
             try:
                 subprocess.check_call(['bash', '{}/StartVideoPlaylist.sh'.format(SCRIPTS_DIR)])
-                return ('Success! Playing Video Playlist')
+                return ('[0]: Success! Playing Video Playlist')
             except subprocess.CalledProcessError as e:
                 print('Error Occurred during execution of StartVideoPlaylist:\n{}'.format(e))
-                return ('Ooops! Something\'s Wrong')
+                return ('[1]: Ooops! Something\'s Wrong')
+        return ('[1]: Yikes! No Such Playlist!')
 
     def pause_playlist(self, **kwargs):
-        return ('Oops! Not Implemented yet')
+        return ('[2]: Oops! Not Implemented yet')
 
     def stop_playlist(self, **kwargs):
         try:
-            subprocess.check_call(['bash', '{}/stopfpp.sh'.format(SCRIPTS_DIR)])
-            return ('Success! Stopped Playlist')
-        except subprocess.CalledProcessError as e:
+            subprocess.Popen(['bash', '{}/stopfpp.sh'.format(SCRIPTS_DIR)])
+            return ('[0]: Success! Stopped Playlist')
+        except Exception as e:
             print('Error Occurred during execution of stopfpp:\n{}'.format(e))
-            return ('Ooops! Something\'s Wrong')
+            return ('[3]: Ooops! Something\'s Wrong')
 
-    def reboot(self, **kwargs):
+class System(Resource):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.actions = {
+            'reboot': lambda: self.reboot(),
+            'shutdown': lambda: self.shutdown(),
+        }
+        self.default = lambda: list(self.actions.keys())
+
+    def get(self, action):
+        return self.actions.get(action, self.default)()
+
+    def reboot(self):
         try:
             subprocess.Popen(['bash', '{}/reboot.sh'.format(SCRIPTS_DIR)])
-            return ('Rebooting Pi in 10 secs!')
+            return ('[0]: Rebooting Pi in 10 secs!')
         except Exception as e:
             print('Error Occurred while Rebooting:\n{}'.format(e))
-            return ('Ooops! Something\'s Wrong')
+            return ('[4]: Ooops! Something\'s Wrong')
 
-    def shutdown(self, **kwargs):
+    def shutdown(self):
         try:
             subprocess.Popen(['bash', '{}/shutdown.sh'.format(SCRIPTS_DIR)])
-            return ('Shutting down Pi in 10 secs!')
+            return ('[0]: Shutting down Pi in 10 secs!')
         except Exception as e:
             print('Error Occurred while Shutting down:\n{}'.format(e))
-            return ('Ooops! Something\'s Wrong')
+            return ('[5]: Ooops! Something\'s Wrong')
 
 ##
 ## Actually setup the Api resource routing here
 ##
 api.add_resource(Info, '/')
-api.add_resource(Do, '/<action>/<playlist>')
+api.add_resource(System, '/<action>')
+api.add_resource(Playlist, '/<action>/<playlist>')
 
 
 if __name__ == "__main__":
