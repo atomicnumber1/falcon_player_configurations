@@ -12,6 +12,7 @@ do
         cp -rf $SOURCE/music/ $TARGET_FOLDER &> /dev/null;
         cp -rf $SOURCE/videos/ $TARGET_FOLDER &> /dev/null;
         # done
+        sudo umount $SOURCE
     fi
     sleep 15;
 done
