@@ -14,7 +14,7 @@ do
         cp -rf $SOURCE/videos/ $TARGET_FOLDER &> /dev/null;
         # done
         sudo umount $SOURCE
-        sudo omxplayer $FILENAME 2>&1 >/dev/null &
+        sudo omxplayer -o local $FILENAME 2>&1 >/dev/null &
     fi
     sleep 15;
 done
