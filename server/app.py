@@ -11,7 +11,7 @@ import logging.handlers
 
 
 from flask import Flask
-from flask_restful import (Api, Resource)
+from flask_restful import (reqparse, Api, Resource)
 
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -45,6 +45,10 @@ STATUS_CODES = {
     'StopError': 3,
     'RebootError': 4,
     'ShutdownError': 5,
+    'SSIDUpdated': 6,
+    'SSIDNotUpdated': 7,
+    'SSIDCheckError': 8,
+    'SSIDUpdateError': 9,
 }
 def gen_response(status, msg):
     return {'status': status, 'msg': msg}
@@ -106,14 +110,23 @@ class System(Resource):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        parser = reqparse.RequestParser()
+        parser.add_argument('wifi_ssid')
+
         self.actions = {
-            'reboot': lambda: self.reboot(),
-            'shutdown': lambda: self.shutdown(),
+            'reboot': self.reboot,
+            'shutdown': self.shutdown,
+            'check_ssid': self.check_ssid,
         }
-        self.default = lambda: gen_response(STATUS_CODES['Success'], list(self.actions.keys()))
+        self.default = lambda: gen_response(STATUS_CODES['Success'], list(self.actions.keys()) + list('update_ssid'))
 
     def get(self, action):
         return self.actions.get(action, self.default)()
+
+    def post(self):
+        args = self.parser.parse_args()
+        return self.update_ssid(args['wifi_ssid'])
 
     def reboot(self):
         try:
@@ -130,6 +143,27 @@ class System(Resource):
         except Exception as e:
             logger.error('Error Occurred while Shutting down:\n{}'.format(e))
             return gen_response(STATUS_CODES['ShutdownError'], 'Ooops! Something\'s Wrong')
+
+    def check_ssid(self):
+        try:
+            ssid_status = subprocess.check_output(['bash', '{}/check_ssid.sh'.format(SCRIPTS_DIR)])
+            if ssid_status == '1':
+                return gen_response(STATUS_CODES['SSIDUpdated'], 'WiFi SSID is already Updated.\n Note: You can only update once.')
+            else:
+                return gen_response(STATUS_CODES['SSIDNotUpdated'], 'WiFi SSID not updated! Please update WiFi SSID.')
+        except subprocess.CalledProcessError as e:
+            logger.error('Error Occurred while Checking for wifi ssid:\n{}'.format(e))
+            return gen_response(STATUS_CODES['SSIDCheckError'], 'Ooops! Something\'s Wrong')
+
+    def update_ssid(self, wifi_ssid):
+        try:
+            subprocess.check_call(['bash', '{}/update_ssid.sh'.format(SCRIPTS_DIR), wifi_ssid])
+            logger.info('WiFi SSID Updated to {}'.format(wifi_ssid))
+            return gen_response(STATUS_CODES['Success'], 'WiFi SSID is Updated! System will now reboot.')
+        except subprocess.CalledProcessError as e:
+            logger.error('Error Occurred while Updating WiFi SSID:\n')
+            logger.error(e)
+            return gen_response(STATUS_CODES['SSIDUpdateError'], 'Ooops! Something\'s Wrong')
 
 ##
 ## Actually setup the Api resource routing here
