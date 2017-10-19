@@ -111,8 +111,8 @@ class System(Resource):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        parser = reqparse.RequestParser()
-        parser.add_argument('wifi_ssid')
+        self.parser = reqparse.RequestParser()
+        self.parser.add_argument('wifi_ssid')
 
         self.actions = {
             'reboot': self.reboot,
@@ -124,8 +124,12 @@ class System(Resource):
     def get(self, action):
         return self.actions.get(action, self.default)()
 
-    def post(self):
+    def post(self, action):
         args = self.parser.parse_args()
+        if not args['wifi_ssid']:
+            return gen_response(STATUS_CODES['SSIDUpdateError'], 'WiFi SSID can\'t be null. Please provide a valid WiFi SSID.')
+        elif not str(args['wifi_ssi']).isalnum():
+            return gen_response(STATUS_CODES['SSIDUpdateError'], 'Only alphanumeric characters are allowed. Please provide a valid WiFi SSID.')
         return self.update_ssid(args['wifi_ssid'])
 
     def reboot(self):
