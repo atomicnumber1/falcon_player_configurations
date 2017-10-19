@@ -128,9 +128,9 @@ class System(Resource):
         args = self.parser.parse_args()
         wifi_ssid = args.get('wifi_ssid', '')
         if not wifi_ssid:
-            return gen_response(STATUS_CODES['SSIDUpdateError'], 'WiFi SSID can\'t be null. Please provide a valid WiFi SSID.')
+            return gen_response(STATUS_CODES['SSIDUpdateError'], 'WiFi SSID can\'t be null.\nPlease provide a valid WiFi SSID.')
         elif not str(wifi_ssid).isalnum():
-            return gen_response(STATUS_CODES['SSIDUpdateError'], 'Only alphanumeric characters are allowed. Please provide a valid WiFi SSID.')
+            return gen_response(STATUS_CODES['SSIDUpdateError'], 'Only alphanumeric characters are allowed.\nPlease provide a valid WiFi SSID.')
         return self.update_ssid(wifi_ssid)
 
     def reboot(self):
@@ -153,7 +153,7 @@ class System(Resource):
         try:
             ssid_status = str(subprocess.check_output(['bash', '{}/check_ssid.sh'.format(SCRIPTS_DIR)]))
             if '1' in ssid_status:
-                return gen_response(STATUS_CODES['SSIDUpdated'], 'WiFi SSID is already Updated.\n Note: You can only update once.')
+                return gen_response(STATUS_CODES['SSIDUpdated'], 'WiFi SSID is already Updated.\nNote: You can only update once.')
             else:
                 return gen_response(STATUS_CODES['SSIDNotUpdated'], 'WiFi SSID not updated! Please update WiFi SSID.')
         except subprocess.CalledProcessError as e:
