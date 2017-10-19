@@ -128,7 +128,7 @@ class System(Resource):
         args = self.parser.parse_args()
         if not args['wifi_ssid']:
             return gen_response(STATUS_CODES['SSIDUpdateError'], 'WiFi SSID can\'t be null. Please provide a valid WiFi SSID.')
-        elif not str(args['wifi_ssi']).isalnum():
+        elif not str(args['wifi_ssid']).isalnum():
             return gen_response(STATUS_CODES['SSIDUpdateError'], 'Only alphanumeric characters are allowed. Please provide a valid WiFi SSID.')
         return self.update_ssid(args['wifi_ssid'])
 
