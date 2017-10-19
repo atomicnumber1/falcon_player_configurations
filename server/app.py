@@ -126,11 +126,12 @@ class System(Resource):
 
     def post(self, action):
         args = self.parser.parse_args()
-        if not args['wifi_ssid']:
+        wifi_ssid = args.get('wifi_ssid', '')
+        if not wifi_ssid:
             return gen_response(STATUS_CODES['SSIDUpdateError'], 'WiFi SSID can\'t be null. Please provide a valid WiFi SSID.')
-        elif not str(args['wifi_ssid']).isalnum():
+        elif not str(wifi_ssid).isalnum():
             return gen_response(STATUS_CODES['SSIDUpdateError'], 'Only alphanumeric characters are allowed. Please provide a valid WiFi SSID.')
-        return self.update_ssid(args['wifi_ssid'])
+        return self.update_ssid(wifi_ssid)
 
     def reboot(self):
         try:
@@ -150,8 +151,8 @@ class System(Resource):
 
     def check_ssid(self):
         try:
-            ssid_status = subprocess.check_output(['bash', '{}/check_ssid.sh'.format(SCRIPTS_DIR)])
-            if ssid_status == '1':
+            ssid_status = str(subprocess.check_output(['bash', '{}/check_ssid.sh'.format(SCRIPTS_DIR)]))
+            if '1' in ssid_status:
                 return gen_response(STATUS_CODES['SSIDUpdated'], 'WiFi SSID is already Updated.\n Note: You can only update once.')
             else:
                 return gen_response(STATUS_CODES['SSIDNotUpdated'], 'WiFi SSID not updated! Please update WiFi SSID.')
