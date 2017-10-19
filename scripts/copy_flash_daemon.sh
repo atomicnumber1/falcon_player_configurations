@@ -1,5 +1,6 @@
 #!/bin/bash
 
+FILENAME='/home/fpp/code/falcon_player_configurations/sounds/Dock.ogg'
 TARGET_FOLDER=/home/fpp/media
 SOURCE=/media/usb
 
@@ -13,6 +14,7 @@ do
         cp -rf $SOURCE/videos/ $TARGET_FOLDER &> /dev/null;
         # done
         sudo umount $SOURCE
+        sudo omxplayer $FILENAME 2>&1 >/dev/null &
     fi
     sleep 15;
 done
